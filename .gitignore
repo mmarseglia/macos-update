@@ -1,0 +1,17 @@
+# macOS system files
+.DS_Store
+
+# Installer build artifacts
+macos-update.pkg
+package-root/
+
+# Log files
+*.log
+*.err
+
+# GitHub Actions artifacts
+*.zip
+*.tar.gz
+
+# VSCode settings (optional)
+.vscode/ 
