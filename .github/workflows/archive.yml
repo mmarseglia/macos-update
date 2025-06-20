@@ -1,0 +1,24 @@
+name: Archive macos-update
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  zip-and-archive:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create zip archive
+        run: |
+          zip -r macos-update.zip update.sh com.marsegm.dailyupdate.plist install.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-update-archive
+          path: macos-update.zip
