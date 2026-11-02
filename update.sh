@@ -10,11 +10,12 @@ fi
 echo "🔧 Updating macOS software..."
 if [ -t 0 ]; then
   sudo softwareupdate -i -a
-elif sudo -n true 2>/dev/null; then
-  sudo -n softwareupdate -i -a
+elif sudo -n -l /usr/sbin/softwareupdate >/dev/null 2>&1; then
+  # Unattended: a failed install is logged but must not block the other updates.
+  sudo -n softwareupdate -i -a || echo "softwareupdate install failed (exit $?); continuing" >&2
 else
   echo "Skipping: no terminal for the sudo password. Pending updates:"
-  softwareupdate -l || true
+  softwareupdate -l 2>&1 || true
 fi
 
 echo

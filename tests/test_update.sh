@@ -26,6 +26,7 @@ STUB
 #!/bin/sh
 echo "softwareupdate $*" >> "$STUB_CALLS"
 if [ "$1" = -l ] && [ "$SWU_LIST_FAILS" = 1 ]; then exit 1; fi
+if [ "$1" = -i ] && [ "$SWU_INSTALL_FAILS" = 1 ]; then exit 1; fi
 exit 0
 STUB
 
@@ -36,7 +37,15 @@ STUB
 echo "sudo $*" >> "$STUB_CALLS"
 if [ "$SUDO_CACHED" = 1 ]; then
   [ "$1" = -n ] && shift
+  # "-l <cmd>" is a permission probe: succeed without running anything.
+  if [ "$1" = -l ]; then exit 0; fi
   exec "$@"
+elif [ "$SUDO_ALLOW" = softwareupdate ] && [ "$1" = -n ]; then
+  # Sudoers rule scoped to softwareupdate only (NOPASSWD).
+  if [ "$2" = -l ] && [ "$3" = /usr/sbin/softwareupdate ]; then exit 0; fi
+  if [ "$2" = softwareupdate ]; then shift; exec "$@"; fi
+  echo "sudo: a password is required" >&2
+  exit 1
 elif [ "$1" = -n ]; then
   exit 1
 elif [ -t 0 ]; then
@@ -124,6 +133,21 @@ test_cached_sudo_installs() {
   assert_not_called "softwareupdate -l"
 }
 
+test_scoped_nopasswd_installs() {
+  run_update notty SUDO_ALLOW=softwareupdate
+  assert_status 0
+  assert_called "softwareupdate -i -a"
+  assert_called "brew upgrade"
+  assert_not_called "softwareupdate -l"
+}
+
+test_cached_install_failure_is_not_fatal() {
+  run_update notty SUDO_CACHED=1 SWU_INSTALL_FAILS=1
+  assert_status 0
+  assert_called "brew upgrade"
+  assert_output_contains "softwareupdate install failed (exit 1); continuing"
+}
+
 test_tty_prompts_sudo() {
   run_update tty
   assert_status 0
@@ -146,12 +170,19 @@ trap 'teardown' EXIT
 run_test test_no_tty_skips_softwareupdate
 run_test test_list_failure_is_not_fatal
 run_test test_cached_sudo_installs
+run_test test_scoped_nopasswd_installs
+run_test test_cached_install_failure_is_not_fatal
 
 # script needs a pty; some sandboxes deny openpty.
 if script -q /dev/null true < /dev/null > /dev/null 2>&1; then
   run_test test_tty_prompts_sudo
 else
-  echo "SKIP test_tty_prompts_sudo (no pty available)"
+  if [ -n "$CI" ]; then
+    echo "FAIL test_tty_prompts_sudo (no pty available in CI; interactive path unexercised)"
+    FAILED=1
+  else
+    echo "SKIP test_tty_prompts_sudo (no pty available)"
+  fi
 fi
 
 run_test test_brew_failure_still_aborts

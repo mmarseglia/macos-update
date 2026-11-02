@@ -32,5 +32,5 @@ Three pieces that must agree on paths and the label `com.marsegm.dailyupdate`:
 ## Things to know
 
 - Both scripts are zsh-only. Keep the `#!/usr/bin/env zsh` shebang; `update.sh` exits early if `$ZSH_VERSION` is unset.
-- `update.sh` runs `sudo softwareupdate -i -a`. launchd has no TTY, so without one the script uses `sudo -n` if credentials are cached, otherwise skips macOS updates and logs `softwareupdate -l`; Homebrew and later steps still run.
+- `update.sh` runs `sudo softwareupdate -i -a`. launchd has no TTY, so unattended runs install macOS updates only if passwordless sudo is configured for softwareupdate (e.g. a sudoers NOPASSWD rule for `/usr/sbin/softwareupdate`; checked with `sudo -n -l`); otherwise they skip and log `softwareupdate -l`. An unattended install failure is logged and the run continues; Homebrew and later steps still run.
 - Both scripts use `set -e`, so any failing step (e.g. `brew upgrade` on a broken cask) aborts the rest of the run. Optional tools (asdf, Oh My Zsh) are guarded with existence checks; follow that pattern when adding new update targets.
