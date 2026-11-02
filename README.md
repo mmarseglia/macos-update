@@ -6,6 +6,7 @@ A simple automation for keeping your macOS system, Homebrew packages, ASDF plugi
 
 - Updates macOS software, Homebrew, ASDF plugins, and Oh My Zsh
 - Installs a LaunchAgent to run updates automatically (default: every Monday at 3:00 AM)
+- Scheduled runs install macOS updates only if passwordless sudo is set up for `softwareupdate` (e.g. a sudoers `NOPASSWD` rule for `/usr/sbin/softwareupdate`); otherwise they log the pending ones to `/usr/local/var/log/update.log`
 - GitHub Actions workflow to zip and archive project files
 
 ## Installation

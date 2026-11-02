@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -12,6 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Run tests
+        run: zsh -n update.sh && zsh -n install.sh && zsh tests/test_update.sh
 
       - name: Create zip archive
         run: |
