@@ -8,7 +8,14 @@ if [ -z "$ZSH_VERSION" ]; then
 fi
 
 echo "🔧 Updating macOS software..."
-sudo softwareupdate -i -a
+if [ -t 0 ]; then
+  sudo softwareupdate -i -a
+elif sudo -n true 2>/dev/null; then
+  sudo -n softwareupdate -i -a
+else
+  echo "Skipping: no terminal for the sudo password. Pending updates:"
+  softwareupdate -l || true
+fi
 
 echo
 echo "🍺 Updating Homebrew and packages..."
