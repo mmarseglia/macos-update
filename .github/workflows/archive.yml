@@ -13,6 +13,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Run tests
+        run: zsh -n update.sh && zsh -n install.sh && zsh tests/test_update.sh
+
       - name: Create zip archive
         run: |
           zip -r macos-update.zip update.sh com.marsegm.dailyupdate.plist install.sh
